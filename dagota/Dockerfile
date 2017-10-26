@@ -1,5 +1,7 @@
 from openshift/base-centos7
 
+LABEL authors="Patrice FERLET <patrice.ferlet@smile.fr"
+
 COPY ./ /usr/src/go/dagota/
 RUN set -xe;                   \
     cd /usr/src/go/dagota;     \
