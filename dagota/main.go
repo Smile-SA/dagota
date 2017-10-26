@@ -50,7 +50,7 @@ var (
 	rack      = flag.String("rack", "", "The rack name for dynomite")
 	dc        = flag.String("dc", "", "The datacenter name for dynomite")
 	token     = flag.String("token", "", "token prefix")
-	tokenreg  = regexp.MustCompile(`^-(\d+)`)
+	tokenreg  = regexp.MustCompile(`^.+-(\d+)`)
 	allPeers  = make([]string, 0, 128)
 	locker    = &sync.Mutex{}
 )
@@ -94,19 +94,23 @@ func main() {
 		defer locker.Unlock()
 		n := len(allPeers)
 		for i, p := range allPeers {
-
+			// do not include this host in list
+			if h, _ := os.Hostname(); p == h {
+				continue
+			}
 			// find "id" in the name, eg. rep-0.domain.svc.local => id is "0"
 			// so the token will be token + "0", and so on
 			b := strings.Split(p, ".")[0]
 			if matches := tokenreg.FindAllStringSubmatch(b, 1); len(matches) > 0 && len(matches[0]) > 0 {
 				id := matches[0][1]
 				t := *token + id
-				entry := fmt.Sprintf("%s:%d:%s:%s", p, 8101, *rack, *dc, t)
+				entry := fmt.Sprintf("%s:%d:%s:%s:%s", p, 8101, *rack, *dc, t)
 				w.Write([]byte(entry))
-				if n < i {
+				if i < n-1 {
 					w.Write([]byte{'|'})
 				}
 			} else {
+				log.Println(matches)
 				log.Println("The domain name " + p + " cannot be used to find id to generate" +
 					"token, please check that name is like name-0, name-1...")
 				continue
@@ -172,7 +176,7 @@ func looping() {
 	}
 
 	if *svc == "" || domainName == "" {
-		log.Fatalf("Incomplete args, require -on-change and/or -on-start, -service and -ns or an env var for POD_NAMESPACE.")
+		log.Fatalf("Incomplete args, require -service or an env var for DYN_SERVICE and -ns or an env var for POD_NAMESPACE.")
 	}
 
 	myName := strings.Join([]string{hostname, *svc, domainName}, ".")
@@ -190,7 +194,6 @@ func looping() {
 
 		if !newPeers.Has(myName) {
 			log.Printf("Have not found myself in list yet.\nMy Hostname: %s\nHosts in list: %s", myName, strings.Join(newPeers.List(), ", "))
-			// TODO: Continue or not continue, that's the question ?
 			continue
 		}
 		peerList := newPeers.List()
