@@ -53,6 +53,7 @@ var (
 	tokenreg  = regexp.MustCompile(`^.+-(\d+)`)
 	allPeers  = make([]string, 0, 128)
 	locker    = &sync.Mutex{}
+	myName    string
 )
 
 func lookup(svcName string) (sets.String, error) {
@@ -95,7 +96,7 @@ func main() {
 		n := len(allPeers)
 		for i, p := range allPeers {
 			// do not include this host in list
-			if h, _ := os.Hostname(); p == h {
+			if p == myName {
 				continue
 			}
 			// find "id" in the name, eg. rep-0.domain.svc.local => id is "0"
@@ -179,7 +180,7 @@ func looping() {
 		log.Fatalf("Incomplete args, require -service or an env var for DYN_SERVICE and -ns or an env var for POD_NAMESPACE.")
 	}
 
-	myName := strings.Join([]string{hostname, *svc, domainName}, ".")
+	myName = strings.Join([]string{hostname, *svc, domainName}, ".")
 	for newPeers, peers := sets.NewString(), sets.NewString(); ; time.Sleep(pollPeriod) {
 		newPeers, err = lookup(*svc)
 		if err != nil {
