@@ -89,6 +89,11 @@ func main() {
 		*svc = s
 	}
 
+	// Simple health check for readinessProbe or livenessProbe
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("ok"))
+	})
+
 	// That handle seve a florida like response for dynomite florida provider
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		locker.Lock()
