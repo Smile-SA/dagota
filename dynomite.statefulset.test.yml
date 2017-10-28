@@ -35,10 +35,10 @@ items:
             ports:
             - containerPort: 6379
               protocol: TCP
-          - image: centos/redis-32-centos7
+          - image: redis
             name: redis
             command:
-              - "/opt/rh/rh-redis32/root/usr/bin/redis-server"
+              - "redis-server"
               - "--port"
               - "22122"
               - "--protected-mode"

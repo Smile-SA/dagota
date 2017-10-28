@@ -27,11 +27,15 @@ oc create -f https://raw.githubusercontent.com/Smile-SA/dagota/master/dynomite.s
 Now you can try to SET/GET values:
 
 ```
-oc run -it redis-test --image=centos/redis-32-centos7 --restart=Never -- bash
+$ oc run -it --name=redis-test --image=redis --restart=Never -- bash
 > redis-cli -h dynomite set foo "bar"
 OK
 > redis-cli -h dynomite get foo
 "bar"
+> exit
+
+# then remove that pod
+oc delete pod redis-test --now
 ```
 
 
@@ -46,3 +50,8 @@ OK
 
 - [ ] Better dagota go code
 - [ ] Test memcached
+- [ ] Check why centos/redis-32-centos7 fails some connection while library/redis is ok
+- [ ] livenessProbe and readinessProbe
+- [ ] Volumes templates for redis
+
+
