@@ -18,7 +18,7 @@ And another thing to appreciate is that OpenShift and Kubernetes also makes moni
 
 So the other solution was to have *multi-master* installation. But... Redis is not able to share database for several master.
 
-We tried a lot, we checked, tested, and finally we find Dynomite (thanks to Laurent Andrau, coworker at Smile)
+We tried a lot, we checked, tested, and finally we find Dynomite (thanks to Laurent Andraud, coworker at Smile)
 
 ## Dynomite, the power from Netflix
 
