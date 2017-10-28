@@ -15,86 +15,24 @@ Also, this images should be coupled with a Redis container that listens on 22122
 
 So that Pod has got 3 containers, one for dagota (to send detected peers to dynoite), dynomite that is used as redis proxy, and redis that is the service to use internally. **You should make a service to bind on dynomite port (6379) and not on 22122**, keep in mind that dynomite **is** the entrypoint.
 
-Here is a Statefulset that should work:
+You can try example at https://raw.githubusercontent.com/Smile-SA/dagota/master/dynomite.statefulset.test.yml:
 
-```yaml
-apiVersion: v1
-items:
-- apiVersion: apps/v1beta1
-  kind: StatefulSet
-  metadata:
-    name: dynomite
-    labels:
-      app: dynomite
-  spec:
-    # note that name to setup service below
-    serviceName: "dynomite"
-    replicas: 3
-    template:
-      metadata:
-        labels:
-          app: dynomite
-          deploymentconfig: dynomite
-        annotations:
-          pod.alpha.kubernetes.io/initialized: "true"
-      spec:
-        containers:
-          - image: smilelab/dagota:latest
-            name: dagota
-            env:
-              - name: POD_NAMESPACE
-                valueFrom:
-                  fieldRef:
-                    apiVersion: v1
-                    fieldPath: metadata.namespace
-              # note that name to setup service below
-              - name: DYN_SVC
-                value: dynomite
-          - image: smilelab/dynomite:latest
-            name: dynomite
-            ports:
-            - containerPort: 6379
-              protocol: TCP
-          - image: centos/redis-32-centos7
-            name: redis
-            command:
-              - "/opt/rh/rh-redis32/root/usr/bin/redis-server"
-              - "--port"
-              - "22122"
-              - "--protected-mode"
-              - "no"
-            ports:
-              - containerPort: 22122
-                protocol: TCP
-
-- apiVersion: v1
-  kind: Service
-  metadata:
-    annotations:
-      openshift.io/generated-by: OpenShiftNewApp
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-    creationTimestamp: null
-    labels:
-      app: dynomite
-    # that name should be the same as
-    # in serviceName in statefulset above
-    name: dynomite
-  spec:
-    ports:
-    - name: redis
-      port: 6379
-      protocol: TCP
-      targetPort: 6379
-    # IMPORTANT, clusterIP to NONE
-    clusterIP: None
-    selector:
-      app: dynomite
-      deploymentconfig: dynomite
-kind: List
-metadata: {}
+```bash
+oc create -f https://raw.githubusercontent.com/Smile-SA/dagota/master/dynomite.statefulset.test.yml
 ```
 
 **Important** You must use "dynomite:6379" (Service) from other pods to connect redis ! Don't connect to redis (22122).
+
+
+Now you can try to SET/GET values:
+
+```
+oc run -it redis-test --image=centos/redis-32-centos7 --restart=Never -- bash
+> redis-cli -h dynomite set foo "bar"
+OK
+> redis-cli -h dynomite get foo
+"bar"
+```
 
 
 # Notes to not break your init
