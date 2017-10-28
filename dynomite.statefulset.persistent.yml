@@ -19,7 +19,7 @@ items:
           pod.alpha.kubernetes.io/initialized: "true"
       spec:
         containers:
-          - image: smilelab/dagota:latest
+          - image: smilelab/dagota
             name: dagota
             env:
               - name: POD_NAMESPACE
@@ -30,12 +30,36 @@ items:
               # note that name to setup service below
               - name: DYN_SVC
                 value: dynomite
+            readinessProbe:
+              httpGet:
+                path: /healthz
+                port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 10
+            livenessProbe:
+              httpGet:
+                path: /healthz
+                port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 10
+
           - image: smilelab/dynomite:latest
             name: dynomite
             ports:
             - containerPort: 6379
               protocol: TCP
-          - image: redis
+            readinessProbe:
+              tcpSocket:
+                port: 6379
+              initialDelaySeconds: 5
+              periodSeconds: 10
+            livenessProbe:
+              tcpSocket:
+                port: 6379
+              initialDelaySeconds: 5
+              periodSeconds: 10
+
+          - image: redis 
             name: redis
             command:
               - "redis-server"
@@ -46,6 +70,29 @@ items:
             ports:
               - containerPort: 22122
                 protocol: TCP
+            readinessProbe:
+              tcpSocket:
+                port: 22122
+            livenessProbe:
+              exec:
+                command:
+                  - "redis-cli"
+                  - "-p"
+                  - "22122"
+                  - "ping"
+              initialDelaySeconds: 5
+              periodSeconds: 10
+            volumeMounts:
+              - name: redis-data
+                mountPath: /data
+    volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
 
 - apiVersion: v1
   kind: Service

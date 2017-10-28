@@ -18,16 +18,17 @@ So that Pod has got 3 containers, one for dagota (to send detected peers to dyno
 You can try example at https://raw.githubusercontent.com/Smile-SA/dagota/master/dynomite.statefulset.test.yml:
 
 ```bash
-oc create -f https://raw.githubusercontent.com/Smile-SA/dagota/master/dynomite.statefulset.test.yml
+oc create -f https://raw.githubusercontent.com/Smile-SA/dagota/master/dynomite.statefulset.persistent.yml
+# or, without storage
+oc create -f https://raw.githubusercontent.com/Smile-SA/dagota/master/dynomite.statefulset.yml
 ```
 
 **Important** You must use "dynomite:6379" (Service) from other pods to connect redis ! Don't connect to redis (22122).
 
-
 Now you can try to SET/GET values:
 
 ```
-$ oc run -it --name=redis-test --image=redis --restart=Never -- bash
+$ oc run -it --name=redis-cli --image=redis --restart=Never -- bash
 > redis-cli -h dynomite set foo "bar"
 OK
 > redis-cli -h dynomite get foo
@@ -35,7 +36,7 @@ OK
 > exit
 
 # then remove that pod
-oc delete pod redis-test --now
+oc delete pod redis-cli --now
 ```
 
 
@@ -51,7 +52,7 @@ oc delete pod redis-test --now
 - [ ] Better dagota go code
 - [ ] Test memcached
 - [ ] Check why centos/redis-32-centos7 fails some connection while library/redis is ok
-- [ ] livenessProbe and readinessProbe
-- [ ] Volumes templates for redis
+- [x] livenessProbe and readinessProbe
+- [x] Volumes templates for redis
 
 
