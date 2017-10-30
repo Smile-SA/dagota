@@ -102,9 +102,9 @@ func main() {
 		n := len(allPeers)
 		for i, p := range allPeers {
 			// do not include this host in list
-			//if p == myName {
-			//	continue
-			//}
+			if p == myName {
+				continue
+			}
 			// find "id" in the name, eg. rep-0.domain.svc.local => id is "0"
 			// so the token will be token + "0", and so on
 			b := strings.Split(p, ".")[0]
