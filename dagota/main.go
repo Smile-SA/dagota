@@ -99,8 +99,9 @@ func main() {
 		locker.Lock()
 		defer locker.Unlock()
 
-		n := len(allPeers)
-		for i, p := range allPeers {
+		list := make([]string, 0)
+
+		for _, p := range allPeers {
 			// do not include this host in list
 			if p == myName {
 				continue
@@ -112,18 +113,16 @@ func main() {
 				id := matches[0][1]
 				t := *token + id
 				entry := fmt.Sprintf("%s:%d:%s:%s:%s", p, 8101, *rack, *dc, t)
-				w.Write([]byte(entry))
-				if i < n-1 {
-					w.Write([]byte{'|'})
-				}
+				list = append(list, entry)
 			} else {
 				log.Println(matches)
 				log.Println("The domain name " + p + " cannot be used to find id to generate" +
 					"token, please check that name is like name-0, name-1...")
 				continue
 			}
-
 		}
+		l := strings.Join(list, "|")
+		w.Write([]byte(l))
 	})
 
 	go looping()
